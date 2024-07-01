@@ -15,6 +15,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -24,10 +25,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
@@ -59,6 +62,8 @@ fun AuthPage(navigator: Navigator) {
 	var emailExists by remember { mutableStateOf(false) }
 	var emailError by remember { mutableStateOf<String?>(null) }
 	var passwordError by remember { mutableStateOf<String?>(null) }
+	var loading by remember { mutableStateOf(false) }
+	val focusManager = LocalFocusManager.current
 	
 	Column(
 		horizontalAlignment = Alignment.CenterHorizontally,
@@ -122,6 +127,7 @@ fun AuthPage(navigator: Navigator) {
 						Appwrite.userExists(email) { res ->
 							res.onSuccess {
 								emailExists = true
+								focusManager.moveFocus(FocusDirection.Down)
 							}.onFailure {
 								if (it.message == "User not found") {
 									emailExists = false
@@ -210,6 +216,7 @@ fun AuthPage(navigator: Navigator) {
 										"Password must have:\n - 1 special character\n - 1 uppercase letter\n - 1 number\nand be at least 10 characters long"
 									return@onKeyEvent false
 								}
+								focusManager.moveFocus(FocusDirection.Down)
 							}
 							false
 						},
@@ -221,10 +228,13 @@ fun AuthPage(navigator: Navigator) {
 				if (emailExists) {
 					Button(
 						onClick = {
+							loading = true
 							Appwrite.login(email, password) { res ->
 								res.onSuccess {
+									loading = false
 									navigator.navigate("/home")
 								}.onFailure { e ->
+									loading = false
 									if ((e as AppwriteException).type == "user_invalid_credentials") {
 										passwordError = "Incorrect password"
 										return@onFailure
@@ -251,11 +261,14 @@ fun AuthPage(navigator: Navigator) {
 								// Houston we have a problem (in email or password validity)
 								return@Button
 							}
-							
+							loading = true
 							Appwrite.createUser(email, password) { result ->
 								result.onSuccess {
+									loading = false
 									navigator.navigate("/home")
 								}.onFailure { e ->
+									loading = false
+									
 									if ((e as AppwriteException).type == "password_personal_data") {
 										passwordError = "Password shouldn't have name or email in it"
 										return@onFailure
@@ -265,6 +278,7 @@ fun AuthPage(navigator: Navigator) {
 										passwordError = e.message ?: "Invalid password"
 										return@onFailure
 									}
+									
 									e.printStackTrace()
 								}
 							}
@@ -273,6 +287,13 @@ fun AuthPage(navigator: Navigator) {
 					) {
 						Text("Sign up")
 					}
+				}
+				Box(modifier = Modifier.height(16.dp))
+				if (loading) {
+					CircularProgressIndicator(
+						modifier = Modifier
+							.width(64.dp)
+					)
 				}
 			}
 		}

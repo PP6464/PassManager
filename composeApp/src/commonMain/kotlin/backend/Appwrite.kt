@@ -58,10 +58,10 @@ object Appwrite {
 		
 		CoroutineScope(Dispatchers.IO).launch {
 			try {
-				account.createEmailPasswordSession(email, password)
+				val s = account.createEmailPasswordSession(email, password)
 				
 				currentAccount = account
-				currentUser = account.get()
+				currentUser = Users(client!!).get(s.userId)
 				
 				callback(Result.success(currentUser!!))
 			} catch (e: AppwriteException) {
