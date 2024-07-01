@@ -15,7 +15,7 @@ import java.util.Properties
 object Appwrite {
 	private var client: Client? = null
 	var currentUser: User<Map<String, Any>>? = null
-	var currentAccount : Account? = null
+	private var currentAccount : Account? = null
 	
 	fun initAppwrite() {
 		val properties = Properties().apply {
