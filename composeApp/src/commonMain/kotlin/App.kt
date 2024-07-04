@@ -1,3 +1,4 @@
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Typography
@@ -38,17 +39,19 @@ fun App() {
 		),
 		typography = Typography(montserrat),
 	) {
-		val navigator = rememberNavigator()
-		NavHost(
-			navigator = navigator,
-			navTransition = NavTransition(),
-			initialRoute = "/auth",
-		) {
-			scene(route = "/auth") {
-				AuthPage(navigator)
-			}
-			scene(route = "/home") {
-				HomePage(navigator)
+		SelectionContainer {
+			val navigator = rememberNavigator()
+			NavHost(
+				navigator = navigator,
+				navTransition = NavTransition(),
+				initialRoute = "/auth",
+			) {
+				scene(route = "/auth") {
+					AuthPage(navigator)
+				}
+				scene(route = "/home") {
+					HomePage(navigator)
+				}
 			}
 		}
 	}

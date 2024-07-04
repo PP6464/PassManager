@@ -6,6 +6,7 @@ import io.appwrite.Query
 import io.appwrite.exceptions.AppwriteException
 import io.appwrite.models.User
 import io.appwrite.services.Account
+import io.appwrite.services.Databases
 import io.appwrite.services.Users
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +16,7 @@ import java.util.Properties
 object Appwrite {
 	private var client: Client? = null
 	var currentUser: User<Map<String, Any>>? = null
-	private var currentAccount : Account? = null
+	private var currentAccount: Account? = null
 	
 	fun initAppwrite() {
 		val properties = Properties().apply {
@@ -70,7 +71,11 @@ object Appwrite {
 		}
 	}
 	
-	fun createUser(email: String, password: String, callback: (Result<User<Map<String, Any>>>) -> Unit) {
+	fun createUser(
+		email: String,
+		password: String,
+		callback: (Result<User<Map<String, Any>>>) -> Unit
+	) {
 		val account = Account(client!!)
 		
 		CoroutineScope(Dispatchers.IO).launch {
@@ -89,4 +94,12 @@ object Appwrite {
 			}
 		}
 	}
+	
+	fun onPasswordChange(callback: (Result<List<Password>>) -> Unit) {
+		CoroutineScope(Dispatchers.IO).launch {
+			Databases(client!!).get("passwords")
+		}
+	}
 }
+
+data class Password(val domain: String, val password: String)
