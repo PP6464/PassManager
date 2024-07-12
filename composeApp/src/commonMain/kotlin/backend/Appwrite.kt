@@ -88,6 +88,13 @@ object Appwrite {
 				
 				currentAccount = account
 				
+				Databases(client!!)
+					.createCollection(
+						databaseId = "passwords",
+						name = currentUser!!.id,
+						collectionId = currentUser!!.id,
+					)
+				
 				callback(Result.success(currentUser!!))
 			} catch (e: AppwriteException) {
 				callback(Result.failure(e))
@@ -95,11 +102,26 @@ object Appwrite {
 		}
 	}
 	
-	fun onPasswordChange(callback: (Result<List<Password>>) -> Unit) {
+	fun fetchPasswords(callback: (Result<List<Password>>) -> Unit) {
 		CoroutineScope(Dispatchers.IO).launch {
-			Databases(client!!).get("passwords")
+			try {
+				val res = Databases(client!!).listDocuments(
+					databaseId = "passwords",
+					collectionId = currentUser!!.id,
+				)
+				val passwords = res.documents.map { Password.fromMap(it.data) }
+				callback(Result.success(passwords))
+			} catch (e: Exception) {
+				callback(Result.failure(e))
+			}
 		}
 	}
 }
 
-data class Password(val domain: String, val password: String)
+data class Password(val domain: String, val password: String) {
+	companion object {
+		fun fromMap(map: Map<String, Any>) : Password {
+			return Password(domain = map["domain"] as String, password = map["password"] as String)
+		}
+	}
+}

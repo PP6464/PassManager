@@ -36,6 +36,7 @@ kotlin {
 			implementation(compose.material3)
 			implementation(libs.appwrite)
 			implementation(libs.precompose)
+			implementation(libs.androidx.runtime.livedata)
 		}
 		desktopMain.dependencies {
 			implementation(compose.desktop.currentOs)
@@ -78,6 +79,9 @@ android {
 	dependencies {
 		debugImplementation(compose.uiTooling)
 	}
+}
+dependencies {
+	implementation(libs.androidx.lifecycle.viewmodel.android)
 }
 
 compose.desktop {
