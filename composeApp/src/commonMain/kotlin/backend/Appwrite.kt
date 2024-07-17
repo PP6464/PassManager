@@ -149,7 +149,7 @@ object Appwrite {
 	}
 }
 
-data class Password(val domain: String, val password: String, val id: String) {
+data class Password(val domain: String, var password: String, val id: String) {
 	companion object {
 		fun fromMap(id: String, map: Map<String, Any>) : Password {
 			return Password(domain = map["domain"] as String, password = map["password"] as String, id = id)

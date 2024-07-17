@@ -45,6 +45,7 @@ import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import passmanager.composeapp.generated.resources.Res
 import passmanager.composeapp.generated.resources.ic_back
+import passmanager.composeapp.generated.resources.ic_copy
 import passmanager.composeapp.generated.resources.ic_lock
 import passmanager.composeapp.generated.resources.ic_visibility
 import passmanager.composeapp.generated.resources.ic_visibility_off
@@ -54,17 +55,18 @@ import passmanager.composeapp.generated.resources.mont
 fun ManagePasswordPage(id: String, navigator: Navigator) {
 	val montserrat = FontFamily(Font(Res.font.mont))
 	var password by remember { mutableStateOf<Password?>(null) }
-	var newPassword = password?.password ?: ""
-	var passwordError: String? = null
-	var obscurePassword = false
+	var passwordError: String? by remember { mutableStateOf(null) }
+	var obscurePassword by remember { mutableStateOf(false) }
 	val clipboardManager = LocalClipboardManager.current
 	
-	CoroutineScope(Dispatchers.IO).launch {
-		Appwrite.getPassword(id) { res ->
-			res.onSuccess {
-				password = it
-			}.onFailure { e ->
-				e.printStackTrace()
+	if (password == null) {
+		CoroutineScope(Dispatchers.IO).launch {
+			Appwrite.getPassword(id) { res ->
+				res.onSuccess {
+					password = it
+				}.onFailure { e ->
+					e.printStackTrace()
+				}
 			}
 		}
 	}
@@ -94,15 +96,16 @@ fun ManagePasswordPage(id: String, navigator: Navigator) {
 					fontSize = 30.sp,
 				),
 			)
+			Box(modifier = Modifier.height(16.dp))
 			Row(
 				horizontalArrangement = Arrangement.Start,
 				verticalAlignment = Alignment.CenterVertically,
 			) {
 				OutlinedTextField(
-					value = newPassword,
+					value = password!!.password,
 					onValueChange = {
 						passwordError = null
-						newPassword = it
+						password!!.password = it
 					},
 					colors = OutlinedTextFieldDefaults.colors(
 						errorBorderColor = Color.Red,
@@ -156,7 +159,7 @@ fun ManagePasswordPage(id: String, navigator: Navigator) {
 				)
 				IconButton(
 					onClick = {
-						clipboardManager.setText(AnnotatedString(newPassword))
+						clipboardManager.setText(AnnotatedString(password!!.password))
 					}
 				) {
 					Icon(
@@ -167,14 +170,14 @@ fun ManagePasswordPage(id: String, navigator: Navigator) {
 			}
 			Button(
 				onClick = {
-					if (!Validator.isValidPassword(newPassword)) {
+					if (!Validator.isValidPassword(password!!.password)) {
 						passwordError =
 							"Password must have:\n - 1 special character\n - 1 uppercase letter\n - 1 number\nand be at least 10 characters long"
 						return@Button
 					}
 					
 					CoroutineScope(Dispatchers.IO).launch {
-						Appwrite.setPassword(password!!.id, newPassword) { res ->
+						Appwrite.setPassword(password!!.id, password!!.password) { res ->
 							res.onSuccess {
 								navigator.goBack()
 							}.onFailure { e ->
