@@ -4,7 +4,6 @@ import io.appwrite.Client
 import io.appwrite.ID
 import io.appwrite.Query
 import io.appwrite.exceptions.AppwriteException
-import io.appwrite.models.Database
 import io.appwrite.models.User
 import io.appwrite.services.Account
 import io.appwrite.services.Databases
@@ -132,7 +131,7 @@ object Appwrite {
 	suspend fun setPassword(id: String, newPassword: String, callback: (Result<Unit>) -> Unit) {
 		CoroutineScope(Dispatchers.IO).launch {
 			try {
-				val res = Databases(client!!).updateDocument(
+				Databases(client!!).updateDocument(
 					databaseId = "passwords",
 					collectionId = currentUser!!.id,
 					documentId = id,
