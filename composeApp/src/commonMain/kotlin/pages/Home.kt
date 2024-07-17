@@ -1,5 +1,7 @@
 package pages
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import backend.Appwrite
 import backend.Password
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import moe.tlaster.precompose.navigation.Navigator
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
@@ -33,12 +38,13 @@ import passmanager.composeapp.generated.resources.Res
 import passmanager.composeapp.generated.resources.ic_add
 import passmanager.composeapp.generated.resources.mont
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomePage(navigator: Navigator) {
 	val montserrat = FontFamily(Font(Res.font.mont))
 	var passwords by remember { mutableStateOf<List<Password>>(emptyList()) }
 	
-	fun refresh() {
+	suspend fun refresh() {
 		Appwrite.fetchPasswords { res ->
 			res.onSuccess {
 				passwords = it
@@ -48,7 +54,7 @@ fun HomePage(navigator: Navigator) {
 		}
 	}
 	
-	refresh()
+	CoroutineScope(Dispatchers.IO).launch { refresh() }
 	
 	Scaffold(
 		floatingActionButton = {
@@ -84,6 +90,9 @@ fun HomePage(navigator: Navigator) {
 				Card(
 					modifier = Modifier
 						.fillMaxWidth()
+						.clickable {
+							navigator.navigate("/manage-password/${it.id}")
+						}
 						.padding(vertical = 8.dp, horizontal = 16.dp),
 				) {
 					Text(
@@ -94,7 +103,7 @@ fun HomePage(navigator: Navigator) {
 							fontFamily = montserrat,
 						),
 						modifier = Modifier.padding(
-							bottom = 16.dp,
+							top = 16.dp,
 							start = 16.dp,
 							end = 16.dp,
 						),

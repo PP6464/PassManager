@@ -7,11 +7,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import backend.Appwrite
 import moe.tlaster.precompose.navigation.NavHost
+import moe.tlaster.precompose.navigation.path
 import moe.tlaster.precompose.navigation.rememberNavigator
 import moe.tlaster.precompose.navigation.transition.NavTransition
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import pages.AuthPage
+import pages.ManagePasswordPage
 import pages.HomePage
 import passmanager.composeapp.generated.resources.Res
 import passmanager.composeapp.generated.resources.mont
@@ -51,6 +53,9 @@ fun App() {
 				}
 				scene(route = "/home") {
 					HomePage(navigator)
+				}
+				scene(route = "/manage-password/{id}") { backStackEntry ->
+					ManagePasswordPage(backStackEntry.path<String>("id")!!, navigator)
 				}
 			}
 		}

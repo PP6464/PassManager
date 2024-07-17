@@ -4,6 +4,7 @@ import io.appwrite.Client
 import io.appwrite.ID
 import io.appwrite.Query
 import io.appwrite.exceptions.AppwriteException
+import io.appwrite.models.Database
 import io.appwrite.models.User
 import io.appwrite.services.Account
 import io.appwrite.services.Databases
@@ -102,15 +103,45 @@ object Appwrite {
 		}
 	}
 	
-	fun fetchPasswords(callback: (Result<List<Password>>) -> Unit) {
+	suspend fun fetchPasswords(callback: (Result<List<Password>>) -> Unit) {
 		CoroutineScope(Dispatchers.IO).launch {
 			try {
 				val res = Databases(client!!).listDocuments(
 					databaseId = "passwords",
 					collectionId = currentUser!!.id,
 				)
-				val passwords = res.documents.map { Password.fromMap(it.data) }
+				val passwords = res.documents.map { Password.fromMap(it.id, it.data) }
 				callback(Result.success(passwords))
+			} catch (e: Exception) {
+				callback(Result.failure(e))
+			}
+		}
+	}
+	
+	suspend fun getPassword(id: String, callback: (Result<Password>) -> Unit) {
+		CoroutineScope(Dispatchers.IO).launch {
+			try {
+				val res = Databases(client!!).getDocument("passwords", currentUser!!.id, id)
+				callback(Result.success(Password.fromMap(id, res.data)))
+			} catch (e: Exception) {
+				callback(Result.failure(e))
+			}
+		}
+	}
+	
+	suspend fun setPassword(id: String, newPassword: String, callback: (Result<Unit>) -> Unit) {
+		CoroutineScope(Dispatchers.IO).launch {
+			try {
+				val res = Databases(client!!).updateDocument(
+					databaseId = "passwords",
+					collectionId = currentUser!!.id,
+					documentId = id,
+					data = mapOf(
+						"password" to newPassword,
+					),
+				)
+				
+				callback(Result.success(Unit))
 			} catch (e: Exception) {
 				callback(Result.failure(e))
 			}
@@ -118,10 +149,10 @@ object Appwrite {
 	}
 }
 
-data class Password(val domain: String, val password: String) {
+data class Password(val domain: String, val password: String, val id: String) {
 	companion object {
-		fun fromMap(map: Map<String, Any>) : Password {
-			return Password(domain = map["domain"] as String, password = map["password"] as String)
+		fun fromMap(id: String, map: Map<String, Any>) : Password {
+			return Password(domain = map["domain"] as String, password = map["password"] as String, id = id)
 		}
 	}
 }
