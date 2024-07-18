@@ -56,7 +56,7 @@ fun ManagePasswordPage(id: String, navigator: Navigator) {
 	val montserrat = FontFamily(Font(Res.font.mont))
 	var password by remember { mutableStateOf<Password?>(null) }
 	var passwordError: String? by remember { mutableStateOf(null) }
-	var obscurePassword by remember { mutableStateOf(false) }
+	var obscurePassword by remember { mutableStateOf(true) }
 	val clipboardManager = LocalClipboardManager.current
 	
 	if (password == null) {
