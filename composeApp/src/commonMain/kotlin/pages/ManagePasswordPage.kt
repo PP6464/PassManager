@@ -160,7 +160,7 @@ fun ManagePasswordPage(id: String, navigator: Navigator) {
 				IconButton(
 					onClick = {
 						clipboardManager.setText(AnnotatedString(password!!.password))
-					}
+					},
 				) {
 					Icon(
 						painter = painterResource(Res.drawable.ic_copy),
