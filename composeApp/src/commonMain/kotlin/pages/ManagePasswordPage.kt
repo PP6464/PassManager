@@ -17,6 +17,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +40,8 @@ import backend.Password
 import backend.Validator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import moe.tlaster.precompose.navigation.Navigator
 import org.jetbrains.compose.resources.Font
@@ -51,25 +54,36 @@ import passmanager.composeapp.generated.resources.ic_visibility
 import passmanager.composeapp.generated.resources.ic_visibility_off
 import passmanager.composeapp.generated.resources.mont
 
-@Composable
-fun ManagePasswordPage(id: String, navigator: Navigator) {
-	val montserrat = FontFamily(Font(Res.font.mont))
-	var password by remember { mutableStateOf<Password?>(null) }
-	var passwordError: String? by remember { mutableStateOf(null) }
-	var obscurePassword by remember { mutableStateOf(true) }
-	val clipboardManager = LocalClipboardManager.current
+class ManagePasswordViewModel(private val id: String) {
+	private val _password = MutableStateFlow<Password?>(null)
+	val password = _password.asStateFlow()
 	
-	if (password == null) {
-		CoroutineScope(Dispatchers.IO).launch {
+	init {
+		getPassword()
+	}
+
+	private fun getPassword() {
+		CoroutineScope(Dispatchers.Default).launch {
 			Appwrite.getPassword(id) { res ->
 				res.onSuccess {
-					password = it
+					_password.value = it
 				}.onFailure { e ->
 					e.printStackTrace()
 				}
 			}
 		}
 	}
+}
+
+@Composable
+fun ManagePasswordPage(id: String, navigator: Navigator, viewModel: ManagePasswordViewModel = remember { ManagePasswordViewModel(id) }) {
+	val montserrat = FontFamily(Font(Res.font.mont))
+	val password = viewModel.password.collectAsState()
+	var passwordError: String? by remember { mutableStateOf(null) }
+	var obscureNewPassword by remember { mutableStateOf(true) }
+	var obscureOldPassword by remember { mutableStateOf(true) }
+	val clipboardManager = LocalClipboardManager.current
+	var newPassword by remember { mutableStateOf("") }
 	
 	Column(
 		horizontalAlignment = Alignment.Start,
@@ -87,80 +101,47 @@ fun ManagePasswordPage(id: String, navigator: Navigator) {
 				contentDescription = null,
 			)
 		}
-		if (password != null) {
+		if (password.value != null) {
 			Text(
-				text = password!!.domain,
+				text = password.value!!.domain,
 				style = TextStyle(
 					fontWeight = FontWeight.Bold,
 					fontFamily = montserrat,
 					fontSize = 30.sp,
 				),
 			)
-			Box(modifier = Modifier.height(16.dp))
+			Box(modifier = Modifier.height(24.dp))
+			Text(
+				text = "Old password",
+				style = TextStyle(
+					fontWeight = FontWeight.Bold,
+					fontFamily = montserrat,
+					fontSize = 20.sp,
+				),
+			)
 			Row(
-				horizontalArrangement = Arrangement.Start,
+				horizontalArrangement = Arrangement.Center,
 				verticalAlignment = Alignment.CenterVertically,
 			) {
-				OutlinedTextField(
-					value = password!!.password,
-					onValueChange = {
-						passwordError = null
-						password!!.password = it
-					},
-					colors = OutlinedTextFieldDefaults.colors(
-						errorBorderColor = Color.Red,
-						focusedBorderColor = Color.Black,
-						cursorColor = Color.Black,
-					),
-					keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
-					isError = passwordError != null,
-					supportingText = {
-						if (passwordError == null) {
-							Box(
-								modifier = Modifier
-									.width(0.dp)
-									.height(0.dp)
-							)
-						} else {
-							androidx.compose.material.Text(text = passwordError!!, color = Color.Red)
-						}
-					},
-					placeholder = { androidx.compose.material.Text(text = "Password", color = Color.Gray) },
-					leadingIcon = {
-						androidx.compose.material.Icon(
-							painter = painterResource(Res.drawable.ic_lock),
-							contentDescription = null,
-						)
-					},
-					trailingIcon = {
-						androidx.compose.material.IconButton(
-							onClick = {
-								obscurePassword = !obscurePassword
-							},
-						) {
-							androidx.compose.material.Icon(
-								painter = if (obscurePassword) {
-									painterResource(Res.drawable.ic_visibility)
-								} else {
-									painterResource(Res.drawable.ic_visibility_off)
-								},
-								contentDescription = null,
-							)
-						}
-					},
-					maxLines = 1,
-					visualTransformation = if (obscurePassword) {
-						PasswordVisualTransformation()
-					} else {
-						VisualTransformation.None
-					},
-					modifier = Modifier
-						.width(400.dp)
+				Text(
+					text = if (obscureOldPassword) "*".repeat(password.value!!.password.length) else password.value!!.password
 				)
+				Box(modifier = Modifier.width(8.dp))
 				IconButton(
 					onClick = {
-						clipboardManager.setText(AnnotatedString(password!!.password))
-					},
+						obscureOldPassword = !obscureOldPassword
+					}
+				) {
+					Icon(
+						painter = if (obscureOldPassword) painterResource(Res.drawable.ic_visibility) else painterResource(Res.drawable.ic_visibility_off),
+						contentDescription = null,
+					)
+				}
+				Box(modifier = Modifier.width(8.dp))
+				IconButton(
+					onClick = {
+						clipboardManager.setText(AnnotatedString(password.value!!.password))
+					}
 				) {
 					Icon(
 						painter = painterResource(Res.drawable.ic_copy),
@@ -168,16 +149,82 @@ fun ManagePasswordPage(id: String, navigator: Navigator) {
 					)
 				}
 			}
+			Box(modifier = Modifier.height(16.dp))
+			Text(
+				text = "New password",
+				style = TextStyle(
+					fontFamily = montserrat,
+					fontWeight = FontWeight.Bold,
+					fontSize = 20.sp,
+				),
+			)
+			Box(modifier = Modifier.height(8.dp))
+			OutlinedTextField(
+				value = newPassword,
+				onValueChange = {
+					passwordError = null
+					newPassword = it
+				},
+				colors = OutlinedTextFieldDefaults.colors(
+					errorBorderColor = Color.Red,
+					focusedBorderColor = Color.Black,
+					cursorColor = Color.Black,
+				),
+				keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
+				isError = passwordError != null,
+				supportingText = {
+					if (passwordError == null) {
+						Box(
+							modifier = Modifier
+								.width(0.dp)
+								.height(0.dp)
+						)
+					} else {
+						androidx.compose.material.Text(text = passwordError!!, color = Color.Red)
+					}
+				},
+				placeholder = { androidx.compose.material.Text(text = "Password", color = Color.Gray) },
+				leadingIcon = {
+					androidx.compose.material.Icon(
+						painter = painterResource(Res.drawable.ic_lock),
+						contentDescription = null,
+					)
+				},
+				trailingIcon = {
+					androidx.compose.material.IconButton(
+						onClick = {
+							obscureNewPassword = !obscureNewPassword
+						},
+					) {
+						androidx.compose.material.Icon(
+							painter = if (obscureNewPassword) {
+								painterResource(Res.drawable.ic_visibility)
+							} else {
+								painterResource(Res.drawable.ic_visibility_off)
+							},
+							contentDescription = null,
+						)
+					}
+				},
+				maxLines = 1,
+				visualTransformation = if (obscureNewPassword) {
+					PasswordVisualTransformation()
+				} else {
+					VisualTransformation.None
+				},
+				modifier = Modifier
+					.width(400.dp)
+			)
 			Button(
 				onClick = {
-					if (!Validator.isValidPassword(password!!.password)) {
+					if (!Validator.isValidPassword(newPassword)) {
 						passwordError =
 							"Password must have:\n - 1 special character\n - 1 uppercase letter\n - 1 number\nand be at least 10 characters long"
 						return@Button
 					}
 					
 					CoroutineScope(Dispatchers.IO).launch {
-						Appwrite.setPassword(password!!.id, password!!.password) { res ->
+						Appwrite.setPassword(password.value!!.id, newPassword) { res ->
 							res.onSuccess {
 								navigator.goBack()
 							}.onFailure { e ->
@@ -187,7 +234,12 @@ fun ManagePasswordPage(id: String, navigator: Navigator) {
 					}
 				}
 			) {
-				Text("Confirm changes")
+				Text(
+					text = "Save changes",
+					style = TextStyle(
+						fontFamily = montserrat,
+					),
+				)
 			}
 		} else {
 			CircularProgressIndicator()
