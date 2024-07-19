@@ -40,7 +40,6 @@ import passmanager.composeapp.generated.resources.Res
 import passmanager.composeapp.generated.resources.ic_add
 import passmanager.composeapp.generated.resources.ic_refresh
 import passmanager.composeapp.generated.resources.mont
-import java.lang.Thread.sleep
 
 @Composable
 fun HomePage(navigator: Navigator) {
