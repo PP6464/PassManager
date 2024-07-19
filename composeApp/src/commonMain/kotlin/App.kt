@@ -15,6 +15,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import pages.AuthPage
 import pages.ManagePasswordPage
 import pages.HomePage
+import pages.ProfilePage
 import passmanager.composeapp.generated.resources.Res
 import passmanager.composeapp.generated.resources.mont
 
@@ -53,6 +54,9 @@ fun App() {
 				}
 				scene(route = "/home") {
 					HomePage(navigator)
+				}
+				scene(route = "/profile") {
+					ProfilePage(navigator)
 				}
 				scene(route = "/manage-password/{id}") { backStackEntry ->
 					ManagePasswordPage(backStackEntry.path<String>("id")!!, navigator)

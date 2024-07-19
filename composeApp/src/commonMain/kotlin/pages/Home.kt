@@ -14,6 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +39,7 @@ import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import passmanager.composeapp.generated.resources.Res
 import passmanager.composeapp.generated.resources.ic_add
+import passmanager.composeapp.generated.resources.ic_person
 import passmanager.composeapp.generated.resources.ic_refresh
 import passmanager.composeapp.generated.resources.mont
 
@@ -108,14 +110,31 @@ fun HomePage(navigator: Navigator) {
 				.fillMaxSize()
 				.padding(16.dp),
 		) {
-			Text(
-				text = "Your passwords",
-				style = TextStyle(
-					fontFamily = montserrat,
-					fontSize = 30.sp,
-					fontWeight = FontWeight.Bold
-				),
-			)
+			Row(
+				horizontalArrangement = Arrangement.SpaceBetween,
+				verticalAlignment = Alignment.CenterVertically,
+				modifier = Modifier.fillMaxWidth(),
+			) {
+				Text(
+					text = "Your passwords",
+					style = TextStyle(
+						fontFamily = montserrat,
+						fontSize = 30.sp,
+						fontWeight = FontWeight.Bold
+					),
+					modifier = Modifier.padding(start = 8.dp)
+				)
+				IconButton(
+					onClick = {
+						navigator.navigate("/profile")
+					},
+				) {
+					Icon(
+						painter = painterResource(Res.drawable.ic_person),
+						contentDescription = null,
+					)
+				}
+			}
 			Box(modifier = Modifier.height(16.dp))
 			passwords.map {
 				Card(
