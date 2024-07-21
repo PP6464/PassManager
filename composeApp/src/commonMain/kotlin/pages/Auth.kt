@@ -5,12 +5,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -40,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import backend.Appwrite
 import backend.Validator
+import backend.getScreenHeight
 import io.appwrite.exceptions.AppwriteException
 import moe.tlaster.precompose.navigation.Navigator
 import org.jetbrains.compose.resources.Font
@@ -64,12 +68,16 @@ fun AuthPage(navigator: Navigator) {
 	var passwordError by remember { mutableStateOf<String?>(null) }
 	var loading by remember { mutableStateOf(false) }
 	val focusManager = LocalFocusManager.current
+	val scrollState = rememberScrollState()
 	
 	Column(
 		horizontalAlignment = Alignment.CenterHorizontally,
 		verticalArrangement = Arrangement.Center,
 		modifier = Modifier
-			.fillMaxSize()
+			.fillMaxWidth()
+			.imePadding()
+			.height(getScreenHeight())
+			.verticalScroll(scrollState)
 			.padding(16.dp)
 	) {
 		Image(
@@ -127,7 +135,7 @@ fun AuthPage(navigator: Navigator) {
 						Appwrite.userExists(email) { res ->
 							res.onSuccess {
 								emailExists = true
-								focusManager.moveFocus(FocusDirection.Down)
+								try { focusManager.moveFocus(FocusDirection.Down) } catch (_: Exception) {} // Seems to sometimes give errors
 							}.onFailure {
 								if (it.message == "User not found") {
 									emailExists = false
@@ -292,7 +300,7 @@ fun AuthPage(navigator: Navigator) {
 				if (loading) {
 					CircularProgressIndicator(
 						modifier = Modifier
-							.width(64.dp)
+							.width(32.dp)
 					)
 				}
 			}
