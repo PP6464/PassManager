@@ -42,6 +42,7 @@ import passmanager.composeapp.generated.resources.ic_add
 import passmanager.composeapp.generated.resources.ic_person
 import passmanager.composeapp.generated.resources.ic_refresh
 import passmanager.composeapp.generated.resources.mont
+import java.lang.Thread.sleep
 
 @Composable
 fun HomePage(navigator: Navigator) {
@@ -72,6 +73,7 @@ fun HomePage(navigator: Navigator) {
 							refreshLoading = true
 							CoroutineScope(Dispatchers.IO).launch {
 								refresh()
+								sleep(250)
 								refreshLoading = false
 							}
 						}
