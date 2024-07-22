@@ -1,5 +1,6 @@
 package pages
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,13 +26,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import backend.Appwrite
 import backend.Password
+import backend.Validator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -49,6 +55,9 @@ fun HomePage(navigator: Navigator) {
 	val montserrat = FontFamily(Font(Res.font.mont))
 	var passwords by remember { mutableStateOf<List<Password>>(emptyList()) }
 	var refreshLoading by remember { mutableStateOf(false) }
+	var creatingPassword by remember { mutableStateOf(false) }
+	var newDomain by remember { mutableStateOf("") }
+	var newPassword by remember { mutableStateOf("") }
 	
 	suspend fun refresh() {
 		Appwrite.fetchPasswords { res ->
@@ -94,12 +103,13 @@ fun HomePage(navigator: Navigator) {
 				Box(modifier = Modifier.width((if (refreshLoading) 16 else 8).dp))
 				Button(
 					onClick = {
-						println("HI")
+						creatingPassword = true
+						newPassword = Validator.generateRandomPassword()
 					}
 				) {
 					Icon(
 						painter = painterResource(Res.drawable.ic_add),
-						contentDescription = null
+						contentDescription = null,
 					)
 				}
 			}
@@ -138,6 +148,73 @@ fun HomePage(navigator: Navigator) {
 				}
 			}
 			Box(modifier = Modifier.height(16.dp))
+			if (creatingPassword) Dialog(
+				onDismissRequest = {
+					creatingPassword = false
+					newDomain = ""
+					newPassword = ""
+				},
+			) {
+				Column(
+					horizontalAlignment = Alignment.Start,
+					verticalArrangement = Arrangement.Center,
+					modifier = Modifier
+						.background(Color.White)
+						.padding(16.dp)
+				) {
+					Text(
+						text = "New password",
+						style = TextStyle(
+							fontFamily = montserrat,
+							fontWeight = FontWeight.Bold,
+							fontSize = 20.sp,
+						),
+					)
+					Text(
+						text = "(Click outside to cancel)",
+						style = TextStyle(
+							fontFamily = montserrat,
+							fontSize = 12.5.sp,
+							fontStyle = FontStyle.Italic,
+						),
+					)
+					Box(modifier = Modifier.height(16.dp))
+					Text(
+						text = "Domain",
+						style = TextStyle(
+							fontFamily = montserrat,
+							fontSize = 15.sp,
+						),
+					)
+					Box(modifier = Modifier.height(8.dp))
+					OutlinedTextField(
+						value = newDomain,
+						onValueChange = {
+							newDomain = it
+						},
+						maxLines = 1,
+					)
+					Box(modifier = Modifier.height(16.dp))
+					Text(
+						text = "Password",
+						style = TextStyle(
+							fontFamily = montserrat,
+							fontSize = 15.sp,
+						),
+					)
+					Box(modifier = Modifier.height(8.dp))
+					OutlinedTextField(
+						value = newPassword,
+						onValueChange = {
+							newPassword = it
+						},
+						maxLines = 1,
+						textStyle = TextStyle(
+							fontFamily = montserrat,
+						)
+					)
+				}
+			}
 			passwords.map {
 				Card(
 					modifier = Modifier
