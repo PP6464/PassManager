@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -239,6 +240,29 @@ fun ManagePasswordPage(id: String, navigator: Navigator, viewModel: ManagePasswo
 					style = TextStyle(
 						fontFamily = montserrat,
 					),
+				)
+			}
+			Box(modifier = Modifier.height(16.dp))
+			Button(
+				onClick = {
+					CoroutineScope(Dispatchers.IO).launch {
+						Appwrite.deletePassword(id) { res ->
+							res.onSuccess {
+								navigator.goBack()
+							}.onFailure { e ->
+								e.printStackTrace()
+							}
+						}
+					}
+				},
+				colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5858)),
+			) {
+				Text(
+					text = "Delete Password",
+					style = TextStyle(
+						fontFamily = montserrat,
+						color = Color.White,
+					)
 				)
 			}
 		} else {

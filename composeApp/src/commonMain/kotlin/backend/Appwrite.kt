@@ -146,6 +146,20 @@ object Appwrite {
 			}
 		}
 	}
+	
+	suspend fun deletePassword(id: String, callback: (Result<Unit>) -> Unit) {
+		try {
+			Databases(client!!).deleteDocument(
+				databaseId = "passwords",
+				collectionId = currentUser!!.id,
+				documentId = id,
+			)
+			
+			callback(Result.success(Unit))
+		} catch (e: Exception) {
+			callback(Result.failure(e))
+		}
+	}
 }
 
 data class Password(val domain: String, var password: String, val id: String) {
