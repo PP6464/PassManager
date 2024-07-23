@@ -11,12 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +33,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -45,8 +50,12 @@ import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import passmanager.composeapp.generated.resources.Res
 import passmanager.composeapp.generated.resources.ic_add
+import passmanager.composeapp.generated.resources.ic_email
+import passmanager.composeapp.generated.resources.ic_lock
 import passmanager.composeapp.generated.resources.ic_person
 import passmanager.composeapp.generated.resources.ic_refresh
+import passmanager.composeapp.generated.resources.ic_visibility
+import passmanager.composeapp.generated.resources.ic_visibility_off
 import passmanager.composeapp.generated.resources.mont
 import java.lang.Thread.sleep
 
@@ -58,6 +67,9 @@ fun HomePage(navigator: Navigator) {
 	var creatingPassword by remember { mutableStateOf(false) }
 	var newDomain by remember { mutableStateOf("") }
 	var newPassword by remember { mutableStateOf("") }
+	var obscureNewPassword by remember { mutableStateOf(true) }
+	var domainError: String? by remember { mutableStateOf(null) }
+	var passwordError: String? by remember { mutableStateOf(null) }
 	
 	suspend fun refresh() {
 		Appwrite.fetchPasswords { res ->
@@ -163,7 +175,7 @@ fun HomePage(navigator: Navigator) {
 						.padding(16.dp)
 				) {
 					Text(
-						text = "New password",
+						text = "Add a password",
 						style = TextStyle(
 							fontFamily = montserrat,
 							fontWeight = FontWeight.Bold,
@@ -192,6 +204,21 @@ fun HomePage(navigator: Navigator) {
 						onValueChange = {
 							newDomain = it
 						},
+						leadingIcon = {
+							Icon(
+								painter = painterResource(Res.drawable.ic_email),
+								contentDescription = null,
+							)
+						},
+						colors = OutlinedTextFieldDefaults.colors(
+							errorBorderColor = Color.Red,
+							focusedBorderColor = Color.Black,
+							cursorColor = Color.Black,
+						),
+						isError = domainError != null,
+						textStyle = TextStyle(
+							fontFamily = montserrat,
+						),
 						maxLines = 1,
 					)
 					Box(modifier = Modifier.height(16.dp))
@@ -208,11 +235,65 @@ fun HomePage(navigator: Navigator) {
 						onValueChange = {
 							newPassword = it
 						},
+						leadingIcon = {
+							Icon(
+								painter = painterResource(Res.drawable.ic_lock),
+								contentDescription = null,
+							)
+						},
+						trailingIcon = {
+							IconButton(
+								onClick = {
+									obscureNewPassword = !obscureNewPassword
+								},
+							) {
+								Icon(
+									painter = if (obscureNewPassword) {
+										painterResource(Res.drawable.ic_visibility)
+									} else {
+										painterResource(Res.drawable.ic_visibility_off)
+									},
+									contentDescription = null,
+								)
+							}
+						},
+						colors = OutlinedTextFieldDefaults.colors(
+							errorBorderColor = Color.Red,
+							focusedBorderColor = Color.Black,
+							cursorColor = Color.Black,
+						),
+						keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
+						isError = passwordError != null,
 						maxLines = 1,
 						textStyle = TextStyle(
 							fontFamily = montserrat,
-						)
+						),
+						visualTransformation = if (obscureNewPassword) {
+							PasswordVisualTransformation()
+						} else {
+							VisualTransformation.None
+						},
 					)
+					Box(modifier = Modifier.height(16.dp))
+					Row(
+						verticalAlignment = Alignment.CenterVertically,
+						horizontalArrangement = Arrangement.SpaceBetween,
+						modifier = Modifier.fillMaxWidth()
+					) {
+						Box {}
+						Button(
+							onClick = {
+							
+							}
+						) {
+							Text(
+								text = "Add password",
+								style = TextStyle(
+									fontFamily = montserrat,
+								),
+							)
+						}
+					}
 				}
 			}
 			passwords.map {
