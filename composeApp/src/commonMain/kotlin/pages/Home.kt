@@ -201,7 +201,27 @@ fun HomePage(navigator: Navigator) {
 					Box(modifier = Modifier.height(8.dp))
 					OutlinedTextField(
 						value = newDomain,
+						supportingText = {
+							if (domainError != null) {
+								Text(
+									text = domainError!!,
+									style = TextStyle(
+										fontFamily = montserrat,
+									)
+								)
+							}
+						},
+						placeholder = {
+							Text(
+								text = "Domain",
+								style = TextStyle(
+									fontFamily = montserrat,
+									color = Color.Gray,
+								),
+							)
+						},
 						onValueChange = {
+							domainError = null
 							newDomain = it
 						},
 						leadingIcon = {
@@ -220,8 +240,9 @@ fun HomePage(navigator: Navigator) {
 							fontFamily = montserrat,
 						),
 						maxLines = 1,
+						modifier = Modifier
+							.width(400.dp),
 					)
-					Box(modifier = Modifier.height(16.dp))
 					Text(
 						text = "Password",
 						style = TextStyle(
@@ -232,7 +253,27 @@ fun HomePage(navigator: Navigator) {
 					Box(modifier = Modifier.height(8.dp))
 					OutlinedTextField(
 						value = newPassword,
+						supportingText = {
+							if (passwordError != null) {
+								Text(
+									text = passwordError!!,
+									style = TextStyle(
+										fontFamily = montserrat,
+									)
+								)
+							}
+						},
+						placeholder = {
+							Text(
+								text = "Password",
+								style = TextStyle(
+									fontFamily = montserrat,
+									color = Color.Gray,
+								),
+							)
+						},
 						onValueChange = {
+							passwordError = null
 							newPassword = it
 						},
 						leadingIcon = {
@@ -273,8 +314,9 @@ fun HomePage(navigator: Navigator) {
 						} else {
 							VisualTransformation.None
 						},
+						modifier = Modifier
+							.width(400.dp),
 					)
-					Box(modifier = Modifier.height(16.dp))
 					Row(
 						verticalAlignment = Alignment.CenterVertically,
 						horizontalArrangement = Arrangement.SpaceBetween,
@@ -283,8 +325,32 @@ fun HomePage(navigator: Navigator) {
 						Box {}
 						Button(
 							onClick = {
-							
-							}
+								if (!Validator.isValidDomain(newDomain)) {
+									domainError = "Invalid domain"
+								}
+								if (!Validator.isValidPassword(newPassword)) {
+									passwordError =
+										"Password must have:\n - 1 special character\n - 1 uppercase letter\n - 1 number\nand be at least 10 characters long"
+								}
+								if (domainError != null || passwordError != null) {
+									return@Button
+								}
+								CoroutineScope(Dispatchers.IO).launch {
+									Appwrite.createPassword(
+										domain = newDomain,
+										password = newPassword,
+									) { res ->
+										res.onSuccess {
+											newDomain = ""
+											newPassword = ""
+											creatingPassword = false
+											navigator.navigate("/manage-password/${it.id}")
+										}.onFailure { e ->
+											e.printStackTrace()
+										}
+									}
+								}
+							},
 						) {
 							Text(
 								text = "Add password",

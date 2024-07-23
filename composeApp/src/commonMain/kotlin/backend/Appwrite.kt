@@ -4,6 +4,7 @@ import io.appwrite.Client
 import io.appwrite.ID
 import io.appwrite.Query
 import io.appwrite.exceptions.AppwriteException
+import io.appwrite.models.Document
 import io.appwrite.models.User
 import io.appwrite.services.Account
 import io.appwrite.services.Databases
@@ -125,6 +126,24 @@ object Appwrite {
 			} catch (e: Exception) {
 				callback(Result.failure(e))
 			}
+		}
+	}
+	
+	suspend fun createPassword(domain: String, password: String, callback: (Result<Document<Map<String, Any>>>) -> Unit) {
+		try {
+			val doc = Databases(client!!).createDocument(
+				databaseId = "passwords",
+				collectionId = currentUser!!.id,
+				data = mapOf(
+					"domain" to domain,
+					"password" to password,
+				),
+				documentId = ID.unique(),
+			)
+			
+			callback(Result.success(doc))
+		} catch (e: Exception) {
+			callback(Result.failure(e))
 		}
 	}
 	
