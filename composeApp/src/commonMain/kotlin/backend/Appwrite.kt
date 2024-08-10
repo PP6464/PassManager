@@ -103,16 +103,26 @@ object Appwrite {
 		}
 	}
 	
-	suspend fun changeProfile(email: String, password: String, callback: (Result<Unit>) -> Unit) {
+	suspend fun changeProfile(email: String, password: String?, callback: (Result<Unit>) -> Unit) {
 		try {
-			Users(client!!).updateEmail(
-				userId = currentUser!!.id,
-				email = email,
-			)
-			Users(client!!).updatePassword(
-				userId = currentUser!!.id,
-				password = password,
-			)
+			if (email != currentUser!!.email) {
+				Users(client!!).updateEmail(
+					userId = currentUser!!.id,
+					email = email,
+				)
+			}
+			if (password != null) {
+				try {
+					Users(client!!).updatePassword(
+						userId = currentUser!!.id,
+						password = password,
+					)
+				} catch (e: AppwriteException) {
+					if (!e.message!!.contains("target")) {
+						e.printStackTrace()
+					}
+				}
+			}
 			currentUser = Users(client!!).get(currentUser!!.id) // Update user's email and password in local variable
 			
 			callback(Result.success(Unit))

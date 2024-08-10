@@ -77,6 +77,7 @@ fun ProfilePage(navigator: Navigator) {
 		Box(modifier = Modifier.height(8.dp))
 		OutlinedTextField(
 			value = email,
+			maxLines = 1,
 			onValueChange = {
 				email = it
 				emailError = null
@@ -113,6 +114,7 @@ fun ProfilePage(navigator: Navigator) {
 		Box(modifier = Modifier.height(8.dp))
 		OutlinedTextField(
 			value = password,
+			maxLines = 1,
 			visualTransformation = if (obscurePassword) PasswordVisualTransformation() else VisualTransformation.None,
 			onValueChange = {
 				password = it
@@ -174,9 +176,9 @@ fun ProfilePage(navigator: Navigator) {
 				}
 				
 				CoroutineScope(Dispatchers.IO).launch {
-					Appwrite.changeProfile(email = email, password = password) { res ->
+					Appwrite.changeProfile(email = email, password = if (password == "") null else password) { res ->
 						res.onSuccess {
-						
+							navigator.goBack()
 						}.onFailure { e ->
 							if ((e as AppwriteException).type == "password_personal_data") {
 								passwordError = "Password shouldn't have name or email in it"
