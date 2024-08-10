@@ -103,6 +103,24 @@ object Appwrite {
 		}
 	}
 	
+	suspend fun changeProfile(email: String, password: String, callback: (Result<Unit>) -> Unit) {
+		try {
+			Users(client!!).updateEmail(
+				userId = currentUser!!.id,
+				email = email,
+			)
+			Users(client!!).updatePassword(
+				userId = currentUser!!.id,
+				password = password,
+			)
+			currentUser = Users(client!!).get(currentUser!!.id) // Update user's email and password in local variable
+			
+			callback(Result.success(Unit))
+		} catch (e: AppwriteException) {
+			callback(Result.failure(e))
+		}
+	}
+	
 	suspend fun fetchPasswords(callback: (Result<List<Password>>) -> Unit) {
 		CoroutineScope(Dispatchers.IO).launch {
 			try {
